@@ -56,10 +56,9 @@ class Render:
         self.overlay_id = overlay_id
         self.overlay_url = overlay_url
 
-        self.geojson = json.loads(geojson)
-        if self.geojson["type"] != "MultiPolygon":
-            geojsontype = self.geojson["type"]
-            raise IOError(f"Expected geojson MultiPolygon geometry, got {geojsontype}")
+        if isinstance(geojson, str):
+            geojson = json.loads(geojson)
+        self.geojson = geojson
 
     def init_cache(self, provider):
         self.cache_path[provider] = self.get_cache_path(provider)
@@ -80,6 +79,8 @@ class Render:
             else:
                 url = self.get_tile_url(tile, self.overlay_url)
             response = requests.get(url)
+            if not response.ok:
+                response.raise_for_status()
             f = open(tile_path, "wb+")
             f.write(response.content)
 
@@ -337,9 +338,6 @@ class Render:
 
             # draw the polyline
             draw.polyline(points)
-
-        # apply to the image
-        draw(self.img)
 
     def crop(self):
         x = self.rendering_bounds.nw.x - (self.minxtile * 256)
