@@ -1,13 +1,12 @@
 import json
 import logging
 import math
-import os
+from pathlib import Path
 
 import geojson
 import numpy as np
 import requests
 from wand.color import Color
-from wand.display import display
 from wand.drawing import Drawing
 from wand.image import Image
 
@@ -64,23 +63,18 @@ class Render:
 
     def init_cache(self, provider):
         self.cache_path[provider] = self.get_cache_path(provider)
-
-        if not os.path.isdir(self.cache_path[provider]):
-            os.makedirs(self.cache_path[provider])
+        self.cache_path[provider].mkdir(exist_ok=True)
 
     def get_cache_path(self, provider):
-        return "%s/%s/%s" % (self.tile_cache_path, provider, self.rendering_zoom,)
+        return Path(self.tile_cache_path) / provider / str(self.rendering_zoom)
 
     def get_tile(self, tile, provider):
-        tile_path = "%s/%s/%s.png" % (self.cache_path[provider], tile[0], tile[1])
-        log.debug("Tile path: " + tile_path)
+        tile_path = Path(self.cache_path[provider]) / str(tile[0]) / str(tile[1])
+        log.debug(f"Tile path: {tile_path}")
 
-        if not os.path.exists(tile_path):
+        if not tile_path.exists():
 
-            tile_dir = os.path.dirname(tile_path)
-
-            if not os.path.isdir(tile_dir):
-                os.makedirs(tile_dir)
+            tile_path.parent.mkdir(exist_ok=True)
             if provider == self.tile_provider:
                 url = self.get_tile_url(tile)
             else:
