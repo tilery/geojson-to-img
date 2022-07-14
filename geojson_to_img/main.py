@@ -323,21 +323,45 @@ class Render:
         draw.stroke_width = 3
         draw.stroke_color = Color("DarkViolet")
         draw.fill_color = Color("transparent")
+        self.draw_feature(draw, self.geojson)
 
-        for ring in self.geojson["coordinates"][0]:
-            points = []
+        # apply to the image
+        draw(self.img)
 
-            # Loop over the coordinates to create a list of tuples
-            for coords in ring:
-                pt = Point(coords[0], coords[1])
-                pt.project(self.rendering_zoom)
-                x, y = pt.get_xy()
-                x = round(x - (self.minxtile * 256))
-                y = round(y - (self.minytile * 256))
-                points.append((x, y))
+    def draw_feature(self, draw, feature):
+        geojson_type = feature["type"]
+        if geojson_type == "MultiPolygon":
+            self.draw_multipolygon(draw, feature)
+        elif geojson_type == "LineString":
+            self.draw_linestring(draw, feature)
+        elif geojson_type == "FeatureCollection":
+            for sub in feature["features"]:
+                self.draw_feature(draw, sub)
+        elif geojson_type == "Feature":
+            self.draw_feature(draw, feature["geometry"])
+        else:
+            raise ValueError(f"Unknown type: {geojson_type}")
 
-            # draw the polyline
-            draw.polyline(points)
+    def draw_linestring(self, draw, feature):
+        self.draw_coordinates(draw, feature["coordinates"])
+
+    def draw_multipolygon(self, draw, feature):
+        for ring in feature["coordinates"][0]:
+            self.draw_coordinates(draw, ring)
+
+    def draw_coordinates(self, draw, coordinates):
+        points = []
+        # Loop over the coordinates to create a list of tuples
+        for coords in coordinates:
+            pt = Point(coords[0], coords[1])
+            pt.project(self.rendering_zoom)
+            x, y = pt.get_xy()
+            x = round(x - (self.minxtile * 256))
+            y = round(y - (self.minytile * 256))
+            points.append((x, y))
+
+        # draw the polyline
+        draw.polyline(points)
 
     def crop(self):
         x = self.rendering_bounds.nw.x - (self.minxtile * 256)
