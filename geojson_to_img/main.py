@@ -125,7 +125,11 @@ class Render:
             self.get_size_from_bounds_and_zoom_level()
             log.debug(
                 "define_zoom_level w: %s, h: %s, z: %s"
-                % (self.width_in_pixel, self.height_in_pixel, self.rendering_zoom,)
+                % (
+                    self.width_in_pixel,
+                    self.height_in_pixel,
+                    self.rendering_zoom,
+                )
             )
 
     def get_bounds(self):
@@ -212,8 +216,9 @@ class Render:
         i = 0
 
         # Create a Matrix of tiles
-        matrix = [ [ 0 for x in range(self.number_of_cols) ] for y in range(self.number_of_rows) ]
-
+        matrix = [
+            [0 for x in range(self.number_of_cols)] for y in range(self.number_of_rows)
+        ]
 
         # Loop over the rows (y tiles)
         for y_tile in tile_y_range:
